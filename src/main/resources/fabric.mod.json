@@ -9,7 +9,7 @@
 	],
 	"contact": {
 		"homepage": "https://example.com",
-		"sources": "https://github.com/ElliotPixel/keyshufflemod"
+		"sources": "https://github.com/ElliotPixel/fabric-keyshuffle-mod"
 	},
 	"license": "MIT",
 	"icon": "assets/keyshuffle/icon.png",
