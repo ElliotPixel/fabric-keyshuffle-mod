@@ -12,18 +12,16 @@ import java.util.*;
 
 public class ExampleClient implements ClientModInitializer {
 
-    private static final Set<String> EXCLUDED_TRANSLATION_KEYS = Set.of(
-            "key.chat",
-            "key.command",
-            "key.playerlist",
-            "key.listPlayers",
-            "key.socialInteractions",
-            "key.advancements",
-            "key.spectatorOutlines",
-            "key.screenshot",
-            "key.smoothCamera",
-            "key.fullscreen",
-            "key.togglePerspective"
+    private static final Set<String> TARGET_TRANSLATION_KEYS = Set.of(
+            "key.jump",
+            "key.sneak",
+            "key.sprint",
+            "key.left",
+            "key.right",
+            "key.back",
+            "key.forward",
+            "key.attack",
+            "key.use"
     );
 
     private float lastHealth = -1f;
@@ -44,27 +42,28 @@ public class ExampleClient implements ClientModInitializer {
     }
 
     private void shuffleKeyBindings(MinecraftClient client) {
-        Set<InputUtil.Key> forbidden = new HashSet<>();
+        Set<InputUtil.Key> usedKeys = new HashSet<>();
         List<KeyBinding> targets = new ArrayList<>();
 
+        // First collect all currently used keys and our target bindings
         for (KeyBinding kb : client.options.allKeys) {
             InputUtil.Key boundKey = InputUtil.fromTranslationKey(kb.getBoundKeyTranslationKey());
+            usedKeys.add(boundKey);
 
-            if (EXCLUDED_TRANSLATION_KEYS.contains(kb.getTranslationKey())) {
-                forbidden.add(boundKey);
-            } else {
+            if (TARGET_TRANSLATION_KEYS.contains(kb.getTranslationKey())) {
                 targets.add(kb);
             }
         }
 
+        // Create pool of available keys (A-Z, 0-9)
         List<InputUtil.Key> pool = new ArrayList<>();
         for (int code = GLFW.GLFW_KEY_A; code <= GLFW.GLFW_KEY_Z; code++) {
             InputUtil.Key key = InputUtil.fromKeyCode(code, 0);
-            if (!forbidden.contains(key)) pool.add(key);
+            if (!usedKeys.contains(key)) pool.add(key);
         }
         for (int code = GLFW.GLFW_KEY_0; code <= GLFW.GLFW_KEY_9; code++) {
             InputUtil.Key key = InputUtil.fromKeyCode(code, 0);
-            if (!forbidden.contains(key)) pool.add(key);
+            if (!usedKeys.contains(key)) pool.add(key);
         }
 
         Collections.shuffle(pool);
@@ -73,6 +72,7 @@ public class ExampleClient implements ClientModInitializer {
             System.out.println("[KeyShuffle] ⚠ Not enough free keys; some bindings unchanged.");
         }
 
+        // Assign new unique keys to our target bindings
         Iterator<InputUtil.Key> iterator = pool.iterator();
         for (KeyBinding kb : targets) {
             if (!iterator.hasNext()) break;
