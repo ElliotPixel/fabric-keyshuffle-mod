@@ -1,0 +1,29 @@
+{
+	"schemaVersion": 1,
+	"id": "keyshuffle",
+	"version": "1.0.0",
+	"name": "Key Shuffle",
+	"description": "A Fabric mod that randomizes keybindings on player damage.",
+	"authors": [
+		"Elliot Pixel"
+	],
+	"contact": {
+		"homepage": "https://example.com",
+		"sources": "https://github.com/ElliotPixel/keyshufflemod"
+	},
+	"license": "MIT",
+	"icon": "assets/keyshuffle/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"client": [
+			"net.fabricmc.example.ExampleClient"
+		]
+	},
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"fabric": "*",
+		"minecraft": "1.21.x"
+	},
+	"suggests": {
+	}
+}
