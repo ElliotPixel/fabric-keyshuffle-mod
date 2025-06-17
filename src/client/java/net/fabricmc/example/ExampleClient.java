@@ -21,7 +21,8 @@ public class ExampleClient implements ClientModInitializer {
             "key.back",
             "key.forward",
             "key.attack",
-            "key.use"
+            "key.use",
+            "key.inventory"
     );
 
     private float lastHealth = -1f;
