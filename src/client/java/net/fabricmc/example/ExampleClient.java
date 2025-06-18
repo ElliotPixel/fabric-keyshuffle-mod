@@ -6,7 +6,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.client.network.ClientPlayerEntity;
 import net.minecraft.client.util.InputUtil;
-import org.lwjgl.glfw.GLFW;
 
 import java.util.*;
 
@@ -26,6 +25,7 @@ public class ExampleClient implements ClientModInitializer {
     );
 
     private float lastHealth = -1f;
+    private boolean keysJustSwapped = false;
 
     @Override
     public void onInitializeClient() {
@@ -35,54 +35,69 @@ public class ExampleClient implements ClientModInitializer {
 
             float currentHealth = player.getHealth();
             if (lastHealth >= 0 && currentHealth < lastHealth) {
-                shuffleKeyBindings(client);
+                swapKeyBindings(client);
+                keysJustSwapped = true;
+            }
+
+            // Reset pressed states after swap
+            if (keysJustSwapped) {
+                for (KeyBinding kb : client.options.allKeys) {
+                    kb.setPressed(kb.isPressed());
+                }
+                keysJustSwapped = false;
             }
 
             lastHealth = currentHealth;
         });
     }
 
-    private void shuffleKeyBindings(MinecraftClient client) {
-        Set<InputUtil.Key> usedKeys = new HashSet<>();
+    private void swapKeyBindings(MinecraftClient client) {
         List<KeyBinding> targets = new ArrayList<>();
 
-        // First collect all currently used keys and our target bindings
+        // Collect all target bindings
         for (KeyBinding kb : client.options.allKeys) {
-            InputUtil.Key boundKey = InputUtil.fromTranslationKey(kb.getBoundKeyTranslationKey());
-            usedKeys.add(boundKey);
-
             if (TARGET_TRANSLATION_KEYS.contains(kb.getTranslationKey())) {
                 targets.add(kb);
             }
         }
 
-        // Create pool of available keys (A-Z, 0-9)
-        List<InputUtil.Key> pool = new ArrayList<>();
-        for (int code = GLFW.GLFW_KEY_A; code <= GLFW.GLFW_KEY_Z; code++) {
-            InputUtil.Key key = InputUtil.fromKeyCode(code, 0);
-            if (!usedKeys.contains(key)) pool.add(key);
-        }
-        for (int code = GLFW.GLFW_KEY_0; code <= GLFW.GLFW_KEY_9; code++) {
-            InputUtil.Key key = InputUtil.fromKeyCode(code, 0);
-            if (!usedKeys.contains(key)) pool.add(key);
-        }
-
-        Collections.shuffle(pool);
-
-        if (pool.size() < targets.size()) {
-            System.out.println("[KeyShuffle] ⚠ Not enough free keys; some bindings unchanged.");
-        }
-
-        // Assign new unique keys to our target bindings
-        Iterator<InputUtil.Key> iterator = pool.iterator();
+        // Create a copy of current bindings for swapping
+        Map<KeyBinding, InputUtil.Key> originalKeys = new HashMap<>();
         for (KeyBinding kb : targets) {
-            if (!iterator.hasNext()) break;
-            InputUtil.Key newKey = iterator.next();
-            kb.setBoundKey(newKey);
-            System.out.println("[KeyShuffle] " + kb.getTranslationKey() + " => " + newKey.getTranslationKey());
+            originalKeys.put(kb, InputUtil.fromTranslationKey(kb.getBoundKeyTranslationKey()));
+        }
+
+        // Shuffle the list to determine swapping order
+        Collections.shuffle(targets);
+
+        // Perform pairwise swaps
+        for (int i = 0; i < targets.size() - 1; i += 2) {
+            KeyBinding first = targets.get(i);
+            KeyBinding second = targets.get(i + 1);
+
+            // Get the original keys
+            InputUtil.Key firstKey = originalKeys.get(first);
+            InputUtil.Key secondKey = originalKeys.get(second);
+
+            // Swap the keys
+            first.setBoundKey(secondKey);
+            second.setBoundKey(firstKey);
+
+            System.out.println("[KeySwap] Swapped " + first.getTranslationKey() + " (" +
+                    InputUtil.fromTranslationKey(first.getBoundKeyTranslationKey()).getLocalizedText().getString() +
+                    ") with " + second.getTranslationKey() + " (" +
+                    InputUtil.fromTranslationKey(second.getBoundKeyTranslationKey()).getLocalizedText().getString() + ")");
+        }
+
+        // If there's an odd number of keys, the last one remains unchanged
+        if (targets.size() % 2 != 0) {
+            KeyBinding last = targets.getLast();
+            System.out.println("[KeySwap] " + last.getTranslationKey() + " (" +
+                    InputUtil.fromTranslationKey(last.getBoundKeyTranslationKey()).getLocalizedText().getString() +
+                    ") was not swapped (odd number of bindings)");
         }
 
         KeyBinding.updateKeysByCode();
-        System.out.println("[KeyShuffle] Key-bindings shuffled without conflicts.");
+        System.out.println("[KeySwap] Key-bindings swapped successfully.");
     }
 }

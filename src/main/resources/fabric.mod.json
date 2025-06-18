@@ -15,10 +15,16 @@
 	"icon": "assets/keyshuffle/icon.png",
 	"environment": "*",
 	"entrypoints": {
+		"main": [
+			"net.fabricmc.example.ExampleMod"
+		],
 		"client": [
 			"net.fabricmc.example.ExampleClient"
 		]
 	},
+	"mixins": [
+		"modid.mixins.json"
+	],
 	"depends": {
 		"fabricloader": ">=0.14.21",
 		"fabric": "*",
